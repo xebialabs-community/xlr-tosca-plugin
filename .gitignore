@@ -1,0 +1,13 @@
+.gradle/
+.idea/
+build/
+node_modules/
+xl-release-server/
+
+log/
+work/
+
+xlr-xld-plugin-*.tgz
+npm-debug.log
+*.iml
+.DS_Store

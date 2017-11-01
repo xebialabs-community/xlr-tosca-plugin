@@ -1,4 +1,3 @@
-#!/bin/sh
 #
 # Copyright 2017 XEBIALABS
 #
@@ -9,15 +8,25 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-SCRIPT=$(readlink -f "$0")
-# Absolute path this script is in, thus /home/user/bin
-SCRIPTPATH=$(dirname "$SCRIPT")
+import sys
+import requests
 
-####################### XLD server data
+# from xlrhttp.HttpRequest import HttpRequest
+
+print "I AM HERE :::::::::"
+sys.stdout.write("HAHAHAHAHAH::::::")
+# get the configuration properties from the UI
+# params = { 'url': configuration.url, 'username' : configuration.username, 'password': configuration.password,  'proxyHost': configuration.proxyHost, 'proxyPort': configuration.proxyPort, 'domain': configuration.domain}
+
+test_url = configuration.url + configuration.restURL +'getworkspaces'
+json_headers = {'content-type': 'application/json', 'Accept': 'application/json'}
+
+response = requests.get(test_url, auth=( configuration.username, configuration.password),headers=json_headers)
 
 
-wget --http-user=admin --http-password=admin --auth-no-challenge \
-     --header="Accept: application/json" \
-     --header="Content-type: application/json" \
-     --post-file=$SCRIPTPATH/data/server-configs.json \
-    http://localhost:5516/repository/cis -O /dev/null
+# do an http request to the server
+# response = HttpRequest(params).get(configuration.restURL +'getworkspaces', contentType = 'application/json')
+
+# check response status code, if is different than 200 exit with error code
+if response.status != 200:
+    sys.exit(1)

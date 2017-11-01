@@ -15,7 +15,9 @@
 	
 
 	<type type="tosca.Server" extends="configuration.HttpConnection">
-        <property name="scriptLocation" default="TestConnection.py" hidden="true" />
+        <property name="scriptLocation" default="tosca/TestToscaConnection.py" hidden="true" />
+		<property name="restURL" category="input" default="/tcrest/toscacommander/" required="false" />
+
         <property name="domain" label="Domain" description="Domain to be used for NTLM authentication" required="false" />
     </type>
 
@@ -25,7 +27,7 @@
 		<property name="toscaServer" category="input" label="Server" referenced-type="tosca.Server" kind="ci" />
 		<property name="username" category="input" required="false" />
 		<property name="password" category="input" password="true" required="false" />
-		<property name="workspace" category="input" description="Workspace name where test event exists." required="true"/>
+		<property name="workspace" default="Test" category="input" description="Workspace name where test event exists." required="true"/>
 		<property name="testEventId" category="input" description="ID of the test event to be executed" required="true"/>
 
 	</type>

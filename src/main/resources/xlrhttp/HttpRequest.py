@@ -45,7 +45,6 @@ class HttpRequest:
         self.username = username
         self.password = password
         self.domain = domain
-        self.authentication = params['authenticationMethod']
 
     def doRequest(self, **options):
         """

@@ -7,5 +7,15 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
+if toscaServer is None:
+    print "No server provided."
+    sys.exit(1)
+#
+# if username is None:
+#     username = toscaServer['username']
+# if password is None:
+#     password = toscaServer['password']
 
-print "executed"
+    tosca_event_url = toscaServer['url'] + '/tcrest/toscacommander/' + task.getPythonScript().getProperty("workspace") + '/object/' + task.getPythonScript().getProperty("testEventId") + '/task/ExecuteNow'
+
+    prepare_response = requests.get(get_xldeploy_url(self.config, tosca_event_url), auth=(self.config.username, self.config.password))

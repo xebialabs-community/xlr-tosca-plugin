@@ -9,23 +9,13 @@
 #
 
 import sys
-import requests
+from xlrhttp.HttpRequest import HttpRequest
 
-# from xlrhttp.HttpRequest import HttpRequest
-
-print "I AM HERE :::::::::"
-sys.stdout.write("HAHAHAHAHAH::::::")
 # get the configuration properties from the UI
-# params = { 'url': configuration.url, 'username' : configuration.username, 'password': configuration.password,  'proxyHost': configuration.proxyHost, 'proxyPort': configuration.proxyPort, 'domain': configuration.domain}
-
-test_url = configuration.url + configuration.restURL +'getworkspaces'
-json_headers = {'content-type': 'application/json', 'Accept': 'application/json'}
-
-response = requests.get(test_url, auth=( configuration.username, configuration.password),headers=json_headers)
-
+params = { 'url': configuration.url, 'username' : configuration.username, 'password': configuration.password,  'proxyHost': configuration.proxyHost, 'proxyPort': configuration.proxyPort}
 
 # do an http request to the server
-# response = HttpRequest(params).get(configuration.restURL +'getworkspaces', contentType = 'application/json')
+response = HttpRequest(params).get(configuration.restURL +'getworkspaces', contentType = 'application/json')
 
 # check response status code, if is different than 200 exit with error code
 if response.status != 200:

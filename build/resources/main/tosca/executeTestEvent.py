@@ -16,6 +16,13 @@ if toscaServer is None:
 # if password is None:
 #     password = toscaServer['password']
 
-    tosca_event_url = toscaServer['url'] + '/tcrest/toscacommander/' + task.getPythonScript().getProperty("workspace") + '/object/' + task.getPythonScript().getProperty("testEventId") + '/task/ExecuteNow'
+params = { 'url': toscaServer['url'], 'username' : toscaServer['username'], 'password': toscaServer['password'],  'proxyHost': toscaServer['proxyHost'], 'proxyPort': toscaServer['proxyPort']}
 
-    prepare_response = requests.get(get_xldeploy_url(self.config, tosca_event_url), auth=(self.config.username, self.config.password))
+tosca_event_url = '/tcrest/toscacommander/' + task.getPythonScript().getProperty("workspace") + '/object/' + task.getPythonScript().getProperty("testEventId") + '/task/ExecuteNow'
+
+response = HttpRequest(params).get(tosca_event_url, contentType = 'application/json')
+
+if response.status == 200:
+    print "Test event %s has been executed in TOSCA." % (task.getPythonScript().getProperty("testEventId"))
+else:
+    print "Something went wrong, please make sure workspace %s is not locked by any other user." % (task.getPythonScript().getProperty("workspace"))

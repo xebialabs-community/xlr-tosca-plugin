@@ -11,88 +11,100 @@
 import re
 import urllib
 
+from java.lang import Integer
 from java.lang import String
-from java.util import Arrays
 
 from org.apache.commons.codec.binary import Base64
 from org.apache.http import HttpHost
-from org.apache.http.auth import AuthScope, NTCredentials
-from org.apache.http.client.config import AuthSchemes, RequestConfig
-from org.apache.http.client.methods import HttpGet, HttpPost, HttpPut, HttpDelete, HttpPatch
-from org.apache.http.client.protocol import HttpClientContext
+from org.apache.http.auth import AuthScope
+from org.apache.http.auth import UsernamePasswordCredentials
+from org.apache.http.client.config import RequestConfig
+from org.apache.http.client.methods import HttpGet, HttpHead, HttpPost, HttpPut, HttpDelete, HttpPatch
+from org.apache.http.impl.client import BasicCredentialsProvider
+from org.apache.http.impl.client import HttpClientBuilder
 from org.apache.http.util import EntityUtils
 from org.apache.http.entity import StringEntity
-from org.apache.http.impl.client import BasicCredentialsProvider, HttpClientBuilder, HttpClients
-from org.apache.http.protocol import BasicHttpContext
+from org.apache.http.impl.client import HttpClients
 
 from com.xebialabs.xlrelease.domain.configuration import HttpConnection
+from xlrelease.HttpResponse import HttpResponse
 
-from xlrhttp.HttpResponse import HttpResponse
 
 class HttpRequest:
-    def __init__(self, params, username = None, password = None, domain = None):
+    def __init__(self, params, username = None, password = None):
         """
         Builds an HttpRequest
 
-        :param params: an HttpConnection
+        :param params: an <a href="/jython-docs/#!/_PROD_VERSION_/service/com.xebialabs.xlrelease.domain.configuration.HttpConnection">HttpConnection</a>
         :param username: the username
-            (optional, it will override the credentials defined on the HttpConnection object)
+            (optional, it will override the credentials defined on the <a href="/jython-docs/#!/_PROD_VERSION_/service/com.xebialabs.xlrelease.domain.configuration.HttpConnection">HttpConnection</a> object)
         :param password: an password
-            (optional, it will override the credentials defined on the HttpConnection object)
+            (optional, it will override the credentials defined on the <a href="/jython-docs/#!/_PROD_VERSION_/service/com.xebialabs.xlrelease.domain.configuration.HttpConnection">HttpConnection</a> object)
         """
         self.params = HttpConnection(params)
-        self.shared_domain = params['domain']
         self.username = username
         self.password = password
-        self.domain = domain
 
     def doRequest(self, **options):
         """
         Performs an HTTP Request
 
         :param options: A keyword arguments object with the following properties :
-            method: the HTTP method : 'GET', 'PUT', 'POST', 'DELETE'
+            method: the HTTP method : 'GET', 'PUT', 'POST', 'DELETE', 'PATCH'
                 (optional: GET will be used if empty)
             context: the context url
-                (optional: the url on HttpConnection will be used if empty)
+                (optional: the url on <a href="/jython-docs/#!/_PROD_VERSION_/service/com.xebialabs.xlrelease.domain.configuration.HttpConnection">HttpConnection</a> will be used if empty)
             body: the body of the HTTP request for PUT & POST calls
                 (optional: an empty body will be used if empty)
             contentType: the content type to use
                 (optional, no content type will be used if empty)
             headers: a dictionary of headers key/values
                 (optional, no headers will be used if empty)
-        :return: an HttpResponse instance
+        :return: an <a href="/jython-docs/#!/_PROD_VERSION_/service/HttpResponse.HttpResponse">HttpResponse</a> instance
         """
         request = self.buildRequest(
-            options.get('method', 'GET'),
-            options.get('context', ''),
-            options.get('body', ''),
-            options.get('contentType', None),
-            options.get('headers', None))
+                options.get('method', 'GET'),
+                options.get('context', ''),
+                options.get('body', ''),
+                options.get('contentType', None),
+                options.get('headers', None))
         return self.executeRequest(request)
 
 
     def get(self, context, **options):
         """
-        Performs an Http GET Request
+        Performs an HTTP GET Request
 
         :param context: the context url
         :param options: the options keyword argument described in doRequest()
-        :return: an HttpResponse instance
+        :return: an <a href="/jython-docs/#!/_PROD_VERSION_/service/HttpResponse.HttpResponse">HttpResponse</a> instance
         """
         options['method'] = 'GET'
         options['context'] = context
         return self.doRequest(**options)
 
 
+    def head(self, context, **options):
+        """
+        Performs an HTTP HEAD Request
+
+        :param context: the context url
+        :param options: the options keyword argument described in doRequest()
+        :return: an <a href="/jython-docs/#!/_PROD_VERSION_/service/HttpResponse.HttpResponse">HttpResponse</a> instance
+        """
+        options['method'] = 'HEAD'
+        options['context'] = context
+        return self.doRequest(**options)
+
+
     def put(self, context, body, **options):
         """
-        Performs an Http PUT Request
+        Performs an HTTP PUT Request
 
         :param context: the context url
         :param body: the body of the HTTP request
         :param options: the options keyword argument described in doRequest()
-        :return: an HttpResponse instance
+        :return: an <a href="/jython-docs/#!/_PROD_VERSION_/service/HttpResponse.HttpResponse">HttpResponse</a> instance
         """
         options['method'] = 'PUT'
         options['context'] = context
@@ -102,12 +114,12 @@ class HttpRequest:
 
     def post(self, context, body, **options):
         """
-        Performs an Http POST Request
+        Performs an HTTP POST Request
 
         :param context: the context url
         :param body: the body of the HTTP request
         :param options: the options keyword argument described in doRequest()
-        :return: an HttpResponse instance
+        :return: an <a href="/jython-docs/#!/_PROD_VERSION_/service/HttpResponse.HttpResponse">HttpResponse</a> instance
         """
         options['method'] = 'POST'
         options['context'] = context
@@ -117,11 +129,11 @@ class HttpRequest:
 
     def delete(self, context, **options):
         """
-        Performs an Http DELETE Request
+        Performs an HTTP DELETE Request
 
         :param context: the context url
         :param options: the options keyword argument described in doRequest()
-        :return: an HttpResponse instance
+        :return: an <a href="/jython-docs/#!/_PROD_VERSION_/service/HttpResponse.HttpResponse">HttpResponse</a> instance
         """
         options['method'] = 'DELETE'
         options['context'] = context
@@ -129,12 +141,12 @@ class HttpRequest:
 
     def patch(self, context, body, **options):
         """
-        Performs an Http PATCH Request
+        Performs an HTTP PATCH Request
 
         :param context: the context url
         :param body: the body of the HTTP request
         :param options: the options keyword argument described in doRequest()
-        :return: an HttpResponse instance
+        :return: an <a href="/jython-docs/#!/_PROD_VERSION_/service/HttpResponse.HttpResponse">HttpResponse</a> instance
         """
         options['method'] = 'PATCH'
         options['context'] = context
@@ -148,6 +160,8 @@ class HttpRequest:
 
         if method == 'GET':
             request = HttpGet(url)
+        elif method == 'HEAD':
+            request = HttpHead(url)
         elif method == 'POST':
             request = HttpPost(url)
             request.setEntity(StringEntity(body))
@@ -164,6 +178,7 @@ class HttpRequest:
 
         request.addHeader('Content-Type', contentType)
         request.addHeader('Accept', contentType)
+        self.setCredentials(request)
         self.setProxy(request)
         self.setHeaders(request, headers)
 
@@ -183,28 +198,19 @@ class HttpRequest:
         return urllib.quote(url, ':/?&=%')
 
 
-    def set_basic_credentials(self, request):
-        credentials = self.get_credentials()
-        encoding = Base64.encodeBase64String(String(credentials["username"] + ':' + credentials["password"]).getBytes())
-        request.addHeader('Authorization', 'Basic ' + encoding)
-
-    def get_ntlm_client(self):
-        request_config = RequestConfig.custom().setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM)).build()
-        httpclient = HttpClients.custom().setDefaultRequestConfig(request_config).build()
-        return httpclient
-
-    def get_credentials(self):
+    def setCredentials(self, request):
         if self.username:
             username = self.username
             password = self.password
-            domain = self.domain
         elif self.params.getUsername():
             username = self.params.getUsername()
             password = self.params.getPassword()
-            domain = self.shared_domain
         else:
             return
-        return {'username': username, 'password':password, 'domain':domain}
+
+        encoding = Base64.encodeBase64String(String(username + ':' + password).getBytes('ISO-8859-1'))
+        request.addHeader('Authorization', 'Basic ' + encoding)
+
 
     def setProxy(self, request):
         if not self.params.getProxyHost():
@@ -225,18 +231,16 @@ class HttpRequest:
         client = None
         response = None
         try:
-            local_context = BasicHttpContext()
-            if self.authentication == "Ntlm":
-                credentials = self.get_credentials()
-                client = self.get_ntlm_client()
-                credentials_provider = BasicCredentialsProvider()
-                credentials_provider.setCredentials(AuthScope.ANY, NTCredentials(credentials["username"], credentials["password"], None, credentials["domain"]))
-                local_context.setAttribute(HttpClientContext.CREDS_PROVIDER, credentials_provider)
+            if self.params.proxyUsername and self.params.proxyPassword:
+                credentials = UsernamePasswordCredentials(self.params.proxyUsername, self.params.proxyPassword)
+                auth_scope = AuthScope(self.params.proxyHost, Integer.valueOf(self.params.proxyPort))
+                creds_provider = BasicCredentialsProvider()
+                creds_provider.setCredentials(auth_scope, credentials)
+                client = HttpClientBuilder.create().setDefaultCredentialsProvider(creds_provider).build()
             else:
                 client = HttpClients.createDefault()
-                self.set_basic_credentials(request)
 
-            response = client.execute(request, local_context)
+            response = client.execute(request)
             status = response.getStatusLine().getStatusCode()
             entity = response.getEntity()
             result = EntityUtils.toString(entity, "UTF-8") if entity else None

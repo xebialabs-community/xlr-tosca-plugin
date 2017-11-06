@@ -15,7 +15,7 @@ from xlrhttp.HttpRequest import HttpRequest
 params = { 'url': configuration.url, 'username' : configuration.username, 'password': configuration.password,  'proxyHost': configuration.proxyHost, 'proxyPort': configuration.proxyPort}
 
 # do an http request to the server
-response = HttpRequest(params).get(configuration.restURL +'getworkspaces', contentType = 'application/json')
+response = HttpRequest(params).get(configuration.apiUrl +'getworkspaces', contentType = 'application/json')
 
 # check response status code, if is different than 200 exit with error code
 if response.status != 200:

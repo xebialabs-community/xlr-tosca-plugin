@@ -10,19 +10,22 @@
 if toscaServer is None:
     print "No server provided."
     sys.exit(1)
-#
-# if username is None:
-#     username = toscaServer['username']
-# if password is None:
-#     password = toscaServer['password']
 
-params = { 'url': toscaServer['url'], 'username' : toscaServer['username'], 'password': toscaServer['password'],  'proxyHost': toscaServer['proxyHost'], 'proxyPort': toscaServer['proxyPort']}
+if username is None:
+    username = toscaServer['username']
+if password is None:
+    password = toscaServer['password']
 
-tosca_event_url = '/tcrest/toscacommander/' + task.getPythonScript().getProperty("workspace") + '/object/' + task.getPythonScript().getProperty("testEventId") + '/task/ExecuteNow'
+params = {'url': toscaServer['url'], 'username': username, 'password': password, 'proxyHost': toscaServer['proxyHost'],
+          'proxyPort': toscaServer['proxyPort']}
 
-response = HttpRequest(params).get(tosca_event_url, contentType = 'application/json')
+tosca_event_url = '/tcrest/toscacommander/' + task.getPythonScript().getProperty(
+    "workspace") + '/object/' + task.getPythonScript().getProperty("testEventId") + '/task/ExecuteNow'
+
+response = HttpRequest(params).get(tosca_event_url, contentType='application/json')
 
 if response.status == 200:
     print "Test event with Id %s has been executed in TOSCA." % (task.getPythonScript().getProperty("testEventId"))
 else:
-    print "Something went wrong, please make sure workspace %s is not locked by any other user." % (task.getPythonScript().getProperty("workspace"))
+    print "Something went wrong, please make sure workspace %s is not locked by any other user." % (
+    task.getPythonScript().getProperty("workspace"))

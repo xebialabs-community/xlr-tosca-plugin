@@ -29,3 +29,4 @@ if response.status == 200:
 else:
     print "Something went wrong, please make sure workspace %s is not locked by any other user." % (
     task.getPythonScript().getProperty("workspace"))
+    sys.exit(1)

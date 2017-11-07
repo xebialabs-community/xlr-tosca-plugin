@@ -1,0 +1,8 @@
+language: python
+deploy:
+  provider: releases
+  api_key:
+    secure: Dn+wN9pCYq3yR+g8qKA6FwjMt/+P7jToIO8vpWDS2/Xj/PER6GDoUHztzUmnYdsjdzofarK/16fAbetJRXTYdcApnics0osmk7EMmgVvRhhQw1rYmVOWk7UzrFFdORfNhVZP+kHcjBL+7iXloF2/E0S8VHyAEjaT1Md3HI4RzAewr6yS/uQebdJ6N9m6uAWViY4zpxKx+U7w4T5dVu8LZc/E/u0VN1kagH10FbmXFzwIJS0Bul5Bnskhwk+Rdj4cjJS81jhL/NfbP8t6l/33tnui1nadGQVTJNJy3Z+RtMSMdC6UwbfflupSYBIH4ZhahbnXV0Q8WVHC3Qu/Ii/w5Za8rt6QwFEK/QttHF4h1VNdm6ksq7L6toTdjKgt9lViSzJv33VgXdeic2yf8JIKw/XL6zv15kwyY2uSjWqA94hmECw7HmO5CN/zONXrjI7RRzCPx/rd/YrJQqQcpik/lY8T2GA9gZtK5ZE+1WDw/NEzD02KmNDLQEijHtu/xkrgn7j3e4EYly/Oesqo3CBBzbb5S2R0QtbiognMa3jShFGv7CfnKYr3/C80gSZwOixohjekJgIdxNoLXVnZknI5iLxuKRU4JwPlX21zq+1J1LE8d2301OyAlh3s0UogkqqM4x0j9jgWH7/WsY1aXMEqPKSXWS40oZgVJUQ9m5fm0+M=
+  file: build/libs/xlr-tosca-plugin-1.0.0.jar
+  on:
+    repo: xebialabs-community/xlr-tosca-plugin

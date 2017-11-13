@@ -16,7 +16,10 @@
 
 	<type type="tosca.Server" extends="configuration.HttpConnection">
         <property name="scriptLocation" default="tosca/TestToscaConnection.py" hidden="true" />
-		<property name="apiUrl" label="API URL" default="/tcrest/toscacommander/" required="false" />
+	<!-- property name="apiUrl" label="API URL" default="/tcrest/toscacommander/" required="false" /> -->
+	<property name="endpoint" label="WebService Endpoint" description="TOSCARemoteExecutionService of external test machine or ManagerService of Distribution Server"/>
+	<property name="testUser" label="Test User" required="false" />			
+	<property name="testPassword" label="Test Password" required="false" />	
     </type>
 
 	<type type="tosca.executeTestEvent" extends="xlrelease.PythonScript" >

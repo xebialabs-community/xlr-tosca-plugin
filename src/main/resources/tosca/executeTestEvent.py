@@ -7,15 +7,73 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
+
+import sys
+
+from java.lang import Exception
+from java.io import PrintWriter
+from java.io import StringWriter
+
+from com.xebialabs.overthere import CmdLine, ConnectionOptions, OperatingSystemFamily, Overthere
+from com.xebialabs.overthere.local import LocalConnection
+from com.xebialabs.overthere.util import CapturingOverthereExecutionOutputHandler, OverthereUtils
+
 if toscaServer is None:
     print "No server provided."
     sys.exit(1)
 
-if username is None:
-    username = toscaServer['username']
-if password is None:
-    password = toscaServer['password']
+execServiceEndpoint = toscaServer['url']
+toscaCiClientHome = openShiftServer['toscaCiClientHome']
+toscaCmd = "java -jar %s/ToscaCIJavaClient.jar" % (toscaCiClientHome)
+execResultFormat = 'junit'
+configFile = "%s/config.xml" % (toscaCiClientHome)
 
+script = """
+%s -e %s -c %s -t %s
+""" % (toscaCmd, execServiceEndpoint, configFile, execResultFormat)
+
+stdout = CapturingOverthereExecutionOutputHandler.capturingHandler()
+stderr = CapturingOverthereExecutionOutputHandler.capturingHandler()
+
+scriptExtension = '.sh'
+try:
+    connection = LocalConnection.getLocalConnection()
+    targetScript = connection.getTempFile('runtoscaciclient', scriptExtension)
+    OverthereUtils.write( String(script).getBytes(), targetScript)
+    targetScript.setExecutable(True)
+    cmd = CmdLine.build( targetScript.getPath() )
+    connection.execute( stdout, stderr, cmd )
+except Exception, e:
+    stacktrace = StringWriter()
+    writer = PrintWriter( stacktrace, True )
+    e.printStackTrace(writer)
+    stderr.hadleLine(stacktrace.toString())
+
+# set variables
+output = stdout.getOutput()
+error = stderr.getOutput()
+
+if len(output) > 0:
+    print "```"
+    print output
+    print "```"
+else:
+    print "----"
+    print "#### Output:"
+    print "```"
+    print output
+    print "```"
+
+    print "----"
+    print "#### Error stream:"
+    print "```"
+    print error
+    print "```"
+    print
+
+    sys.exit(response.rc)
+    
+    
 params = {'url': toscaServer['url'], 'username': username, 'password': password, 'proxyHost': toscaServer['proxyHost'],
           'proxyPort': toscaServer['proxyPort']}
 

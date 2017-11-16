@@ -22,32 +22,50 @@ if toscaServer is None:
     print "No server provided."
     sys.exit(1)
 
-execServiceEndpoint = toscaServer['url']
-toscaCiClientHome = openShiftServer['toscaCiClientHome']
+execServiceEndpoint = toscaServer['endpoint']
+toscaCiClientHome = toscaServer['toscaCiClientHome']
 toscaCmd = "java -jar %s/ToscaCIJavaClient.jar" % (toscaCiClientHome)
 execResultFormat = 'junit'
-configFile = "%s/config.xml" % (toscaCiClientHome)
-
-script = """
-%s -e %s -c %s -t %s
-""" % (toscaCmd, execServiceEndpoint, configFile, execResultFormat)
+#configFile = "%s/config.xml" % (toscaCiClientHome)
 
 stdout = CapturingOverthereExecutionOutputHandler.capturingHandler()
 stderr = CapturingOverthereExecutionOutputHandler.capturingHandler()
 
 scriptExtension = '.sh'
+
 try:
     connection = LocalConnection.getLocalConnection()
+
+    ciTestExecutionConfig="""
+    <?xml version="1.0" encoding="utf-16" ?>
+    <testConfiguration>
+        <TestEvents>
+            <TestEvent>%s</TestEvent>
+        </TestEvents>
+    </testConfiguration>
+    """ % (testEvent)
+
+    ciTestConfig = connection.getTempFile('TestConfig', ".xml")
+    OverthereUtils.write( String(ciTestExecutionConfig).getBytes(), ciTestConfig)
+    
+    script = """
+    %s -e %s -c %s -t %s
+    """ % (toscaCmd, execServiceEndpoint, ciTestConfig.getPath(), execResultFormat)
+
+    print script
+
     targetScript = connection.getTempFile('runtoscaciclient', scriptExtension)
     OverthereUtils.write( String(script).getBytes(), targetScript)
     targetScript.setExecutable(True)
+
     cmd = CmdLine.build( targetScript.getPath() )
     connection.execute( stdout, stderr, cmd )
+
 except Exception, e:
     stacktrace = StringWriter()
     writer = PrintWriter( stacktrace, True )
     e.printStackTrace(writer)
-    stderr.hadleLine(stacktrace.toString())
+    stderr.handleLine(stacktrace.toString())
 
 # set variables
 output = stdout.getOutput()
@@ -72,19 +90,3 @@ else:
     print
 
     sys.exit(response.rc)
-    
-    
-params = {'url': toscaServer['url'], 'username': username, 'password': password, 'proxyHost': toscaServer['proxyHost'],
-          'proxyPort': toscaServer['proxyPort']}
-
-tosca_event_url = '/tcrest/toscacommander/' + task.getPythonScript().getProperty(
-    "workspace") + '/object/' + task.getPythonScript().getProperty("testEventId") + '/task/ExecuteNow'
-
-response = HttpRequest(params).get(tosca_event_url, contentType='application/json')
-
-if response.status == 200:
-    print "Test event with Id %s has been executed in TOSCA." % (task.getPythonScript().getProperty("testEventId"))
-else:
-    print "Something went wrong, please make sure workspace %s is not locked by any other user." % (
-    task.getPythonScript().getProperty("workspace"))
-    sys.exit(1)

@@ -14,12 +14,14 @@
 <synthetic xsi:schemaLocation="http://www.xebialabs.com/deployit/synthetic synthetic.xsd" xmlns="http://www.xebialabs.com/deployit/synthetic" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	
 
-	<type type="tosca.Server" extends="configuration.HttpConnection">
-        <property name="scriptLocation" default="tosca/TestToscaConnection.py" hidden="true" />
-	<!-- property name="apiUrl" label="API URL" default="/tcrest/toscacommander/" required="false" /> -->
-	<property name="endpoint" label="WebService Endpoint" description="TOSCARemoteExecutionService of external test machine or ManagerService of Distribution Server"/>
-	<property name="testUser" label="Test User" required="false" />			
-	<property name="testPassword" label="Test Password" required="false" />	
+	<type type="tosca.Server" extends="xlrelease.Configuration">
+	    <!--<property name="scriptLocation" default="tosca/TestToscaConnection.py" hidden="true" />-->
+		<!-- property name="apiUrl" label="API URL" default="/tcrest/toscacommander/" required="false" /> -->
+		<property name="endpoint" label="Execution Service Endpoint" description="TOSCARemoteExecutionService of external test machine or ManagerService of Distribution Server"/>
+		
+		<property name="toscaCiClientHome" label="TOSCACIClient Home" description="TOSCACIClient home directory" required="true" />	
+		<property name="testUser" label="Test User" required="false" />			
+		<property name="testPassword" label="Test Password" required="false" password="true"/>	
     </type>
 
 	<type type="tosca.executeTestEvent" extends="xlrelease.PythonScript" >
@@ -28,8 +30,8 @@
 		<property name="toscaServer" category="input" label="Server" referenced-type="tosca.Server" kind="ci" />
 		<property name="username" category="input" required="false" />
 		<property name="password" category="input" password="true" required="false" />
-		<property name="workspace" default="Test" category="input" description="Workspace name where test event exists." required="true"/>
-		<property name="testEventId" category="input" description="ID of the test event to be executed" required="true"/>
+		<!--<property name="workspace" default="Test" category="input" description="Workspace name where test event exists." required="true"/>-->
+		<property name="testEvent" category="input" description="Test event to be executed" required="true"/>
 	</type>
 
 </synthetic>

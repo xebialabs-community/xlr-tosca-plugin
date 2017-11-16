@@ -8,7 +8,7 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-import sys
+import sys,datetime, os
 
 from java.lang import Exception
 from java.io import PrintWriter
@@ -23,15 +23,25 @@ if toscaServer is None:
     sys.exit(1)
 
 execServiceEndpoint = toscaServer['endpoint']
-toscaCiClientHome = toscaServer['toscaCiClientHome']
+toscaCiClientHome   = toscaServer['toscaCiClientHome']
+testResultDir       = toscaServer['testResultDir'] + '/' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+serviceUser         = toscaServer['serviceUser']
+servicePassword     = toscaServer['servicePassword']
+
 toscaCmd = "java -jar %s/ToscaCIJavaClient.jar" % (toscaCiClientHome)
 execResultFormat = 'junit'
-#configFile = "%s/config.xml" % (toscaCiClientHome)
 
 stdout = CapturingOverthereExecutionOutputHandler.capturingHandler()
 stderr = CapturingOverthereExecutionOutputHandler.capturingHandler()
 
 scriptExtension = '.sh'
+
+
+try:
+    os.makedirs(testResultDir)
+except OSError as e:
+    if e.errno != errno.EEXIST:
+        raise 
 
 try:
     connection = LocalConnection.getLocalConnection()
@@ -49,8 +59,11 @@ try:
     OverthereUtils.write( String(ciTestExecutionConfig).getBytes(), ciTestConfig)
     
     script = """
-    %s -e %s -c %s -t %s
-    """ % (toscaCmd, execServiceEndpoint, ciTestConfig.getPath(), execResultFormat)
+    %s -e %s -c %s -t %s -r %s
+    """ % (toscaCmd, execServiceEndpoint, ciTestConfig.getPath(), execResultFormat, testResultDir)
+
+    if serviceUser is not None:
+        script = script + " -l %s -p %s " % (serviceUser, servicePassword)
 
     print script
 

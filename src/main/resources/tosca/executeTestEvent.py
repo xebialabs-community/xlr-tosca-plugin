@@ -18,11 +18,6 @@ if toscaServer is None:
     print "No server provided."
     sys.exit(1)
 
-if username is None:
-    username = toscaServer['username']
-if password is None:
-    password = toscaServer['password']
-
 clientId = UUID.randomUUID()
 
 execTestEventContent= """
@@ -59,10 +54,10 @@ xmlns:tric='Tricentis.DistributionServer.ServiceInterface.Services'
 """ % (clientId)
 
 
-ns={'t':'Tricentis.DistributionServer.ServiceInterface.Services', 'a':'http://schemas.datacontract.org/2004/07/Tricentis.DistributionServer.ServiceInterface.Data.Manager','b':'http://schemas.datacontract.org/2004/07/Tricentis.DistributionServer.ServiceInterface.Data.Monitor'}}
+ns={'t':'Tricentis.DistributionServer.ServiceInterface.Services', 'a':'http://schemas.datacontract.org/2004/07/Tricentis.DistributionServer.ServiceInterface.Data.Manager','b':'http://schemas.datacontract.org/2004/07/Tricentis.DistributionServer.ServiceInterface.Data.Monitor'}
 
 headers		= {'SOAPAction':'Tricentis.DistributionServer.ServiceInterface.Services/IManagerService/DistributeCiTestEvents'}
-request		= HttpRequest(toscaServer,)
+request		= HttpRequest(toscaServer)
 response	= request.post(toscaServer['apiUrl'], execTestEventContent, contentType = 'text/xml', headers = headers)
 
 if response.status == 200:
@@ -72,7 +67,7 @@ else:
     print response.headers, '\n'
     print response.status, '\n'
     print response.response, '\n'
-   sys.exit(1)
+    sys.exit(1)
 
 headers = {'SOAPAction':'Tricentis.DistributionServer.ServiceInterface.Services/IManagerService/PollCiTestEventsResults'}
 while (True):

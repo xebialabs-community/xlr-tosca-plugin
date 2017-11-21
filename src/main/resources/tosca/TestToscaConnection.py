@@ -9,14 +9,16 @@
 #
 
 import sys
-from xlrhttp.HttpRequest import HttpRequest
 
 # get the configuration properties from the UI
 params = { 'url': configuration.url, 'username' : configuration.username, 'password': configuration.password,  'proxyHost': configuration.proxyHost, 'proxyPort': configuration.proxyPort}
 
 # do an http request to the server
-response = HttpRequest(params).get(configuration.apiUrl +'getworkspaces', contentType = 'application/json')
+response = HttpRequest(params).get(configuration.apiUrl + '?wsdl')
 
 # check response status code, if is different than 200 exit with error code
+
 if response.status != 200:
+    print response.status
     sys.exit(1)
+

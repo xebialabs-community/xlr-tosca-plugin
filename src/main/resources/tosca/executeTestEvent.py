@@ -101,7 +101,7 @@ allPassed = True
 passedCount = 0
 failedCount = 0
 resultTree = ET.fromstring(result)
-distributionEntries = tree.find('.//t:PollCiTestEventsResultsResponse/t:PollCiTestEventsResultsResult/a:DistributionEvents/b:MonitorDistributionEvent/b:MonitorDistributionItems/b:MonitorDistributionItem/b:MonitorDistributionList/b:MonitorDistributionEntries', ns)
+distributionEntries = resultTree.find('.//t:PollCiTestEventsResultsResponse/t:PollCiTestEventsResultsResult/a:DistributionEvents/b:MonitorDistributionEvent/b:MonitorDistributionItems/b:MonitorDistributionItem/b:MonitorDistributionList/b:MonitorDistributionEntries', ns)
  
 for distributionEntry in distributionEntries:
       testCaseStatus = distributionEntry.find('./b:TestResult',ns).text

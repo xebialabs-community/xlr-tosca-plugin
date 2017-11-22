@@ -10,7 +10,14 @@
 
 
 from  java.util import UUID
-import time, sys
+from java.util import Date
+from java.util import GregorianCalendar
+from javax.xml.datatype import DatatypeConfigurationException
+from javax.xml.datatype import DatatypeFactory
+from javax.xml.datatype import XMLGregorianCalendar
+
+import time
+import sys
 import xml.etree.ElementTree as ET
 
 
@@ -18,7 +25,11 @@ if toscaServer is None:
     print "No server provided."
     sys.exit(1)
 
-clientId = UUID.randomUUID()
+clientId     = UUID.randomUUID()
+dt           = Date()
+gregCalendar = GregorianCalendar()
+gregCalendar.setTime(dt)
+startTime    = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregCalendar)
 
 execTestEventContent= """
   <s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/'>
@@ -32,11 +43,12 @@ execTestEventContent= """
       <b:string>%s</b:string>
     </a:EventNames>
     <a:PollingInterval>300000</a:PollingInterval>
+    <a:a:StartTime>%s</a:a:StartTime>
    </distributeCiTestEventsRequest>
   </DistributeCiTestEvents>
 </s:Body>
 </s:Envelope>
- """ % (clientId, testEvent)
+ """ % (clientId, testEvent, startTime)
 
 pollResultsContent = """
 <soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' 
@@ -61,7 +73,7 @@ request		= HttpRequest(toscaServer)
 response	= request.post(toscaServer['apiUrl'], execTestEventContent, contentType = 'text/xml', headers = headers)
 
 if response.status == 200:
-   print "Requested test event distribution for Id: %s" % (clientId)
+   print "Requested test event distribution for Id: %s, start time %s" % (clientId, startTime)
 else:
     print 'Failed to trigger distribution for Id: %s' % (clientId)
     print response.headers, '\n'
@@ -102,8 +114,8 @@ passedCount = 0
 failedCount = 0
 resultTree = ET.fromstring(result)
 distributionEntries = resultTree.find('.//t:PollCiTestEventsResultsResponse/t:PollCiTestEventsResultsResult/a:DistributionEvents/b:MonitorDistributionEvent/b:MonitorDistributionItems/b:MonitorDistributionItem/b:MonitorDistributionList/b:MonitorDistributionEntries', ns)
- 
- testCaseStatuses = {}
+
+testCaseStatuses = {}
 for distributionEntry in distributionEntries:
       testCaseStatus = distributionEntry.find('./b:TestResult',ns).text
       testCaseName = distributionEntry.find('./b:Name',ns).text

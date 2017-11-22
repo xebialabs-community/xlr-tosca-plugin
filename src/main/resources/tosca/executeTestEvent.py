@@ -75,15 +75,15 @@ while (True):
    if response.status == 200 :
       respBody =  response.response
       tree =  ET.fromstring(respBody)
-      ns={'t':'Tricentis.DistributionServer.ServiceInterface.Services', 'a':'http://schemas.datacontract.org/2004/07/Tricentis.DistributionServer.ServiceInterface.Data.Manager'}
       execFinished = tree.find('.//t:PollCiTestEventsResultsResponse/t:PollCiTestEventsResultsResult/a:ExecutionFinished', ns).text
       if execFinished == "false":
          print "Execution still in progress for id: %s" % (clientId), '\n'
          time.sleep(300)
-      elif execFinished == "Finished":
+      elif execFinished == "true":
            result = response.response
            break 
       else:
+          print "Execution %s, exiting\n" % (execFinished) 
           print response.headers, '\n'
           print response.status, '\n'
           print response.response, '\n'
@@ -103,8 +103,11 @@ failedCount = 0
 resultTree = ET.fromstring(result)
 distributionEntries = resultTree.find('.//t:PollCiTestEventsResultsResponse/t:PollCiTestEventsResultsResult/a:DistributionEvents/b:MonitorDistributionEvent/b:MonitorDistributionItems/b:MonitorDistributionItem/b:MonitorDistributionList/b:MonitorDistributionEntries', ns)
  
+ testCaseStatuses = {}
 for distributionEntry in distributionEntries:
       testCaseStatus = distributionEntry.find('./b:TestResult',ns).text
+      testCaseName = distributionEntry.find('./b:Name',ns).text
+      testCaseStatuses[testCaseName] = testCaseStatus
       if testCaseStatus == 'Passed':
          passedCount += 1
       else:
@@ -113,6 +116,7 @@ for distributionEntry in distributionEntries:
 
 passedTestCaseCount = passedCount
 failedTestCaseCount = failedCount
+
 
 if not allPassed :
    print 'Not all test cases passed'

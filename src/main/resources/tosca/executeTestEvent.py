@@ -10,14 +10,8 @@
 
 
 from  java.util import UUID
-from java.util import Date
-from java.util import GregorianCalendar
-from javax.xml.datatype import DatatypeConfigurationException
-from javax.xml.datatype import DatatypeFactory
-from javax.xml.datatype import XMLGregorianCalendar
-
-import time
-import sys
+from org.apache.commons.mail import EmailException, SimpleEmail
+import time, sys
 import xml.etree.ElementTree as ET
 
 
@@ -25,11 +19,40 @@ if toscaServer is None:
     print "No server provided."
     sys.exit(1)
 
-clientId     = UUID.randomUUID()
-dt           = Date()
-gregCalendar = GregorianCalendar()
-gregCalendar.setTime(dt)
-startTime    = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregCalendar)
+if emailTestResults == True :
+   if smptpServer is None :
+      print "No SMTP server provided"
+      sys.exit(1)
+
+SOCKET_TIMEOUT = 30000 # 30s
+
+def sendEmail(body):
+    email = SimpleEmail()
+    email.setHostName(smtpServer['host'])
+    email.setSmtpPort(smtpServer['port'])
+    if smtpServer['username']:
+       email.setAuthentication(smtpServer['username'], smtpServer['password'])
+       email.setSocketConnectionTimeout(SOCKET_TIMEOUT);
+       email.setSocketTimeout(SOCKET_TIMEOUT);
+
+    try:
+       email.setFrom(smtpServer['fromAddress'])
+       for toAddress in toAddresses.split(','):
+           email.addTo(toAddress)
+       if ccAddresses:
+          for ccAddress in ccAddresses.split(','):
+              email.addCc(ccAddress)
+       if bccAddresses:
+          for bccAddress in bccAddresses.split(','):
+              email.addBcc(bccAddress)
+       email.setSubject(subject)
+       email.setMsg(body)
+       email.send()
+    except EmailException, e:
+       print 'ERROR: Unable to send notification due to:', e
+       sys.exit(1)  
+
+clientId = UUID.randomUUID()
 
 execTestEventContent= """
   <s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/'>
@@ -43,12 +66,12 @@ execTestEventContent= """
       <b:string>%s</b:string>
     </a:EventNames>
     <a:PollingInterval>300000</a:PollingInterval>
-    <a:a:StartTime>%s</a:a:StartTime>
+    <a:StartTime>2017-11-22T05:10:50.8470018-05:00</a:StartTime>
    </distributeCiTestEventsRequest>
   </DistributeCiTestEvents>
 </s:Body>
 </s:Envelope>
- """ % (clientId, testEvent, startTime)
+ """ % (clientId, testEvent)
 
 pollResultsContent = """
 <soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' 
@@ -73,7 +96,7 @@ request		= HttpRequest(toscaServer)
 response	= request.post(toscaServer['apiUrl'], execTestEventContent, contentType = 'text/xml', headers = headers)
 
 if response.status == 200:
-   print "Requested test event distribution for Id: %s, start time %s" % (clientId, startTime)
+   print "Requested test event distribution for Id: %s" % (clientId)
 else:
     print 'Failed to trigger distribution for Id: %s' % (clientId)
     print response.headers, '\n'
@@ -95,7 +118,6 @@ while (True):
            result = response.response
            break 
       else:
-          print "Execution %s, exiting\n" % (execFinished) 
           print response.headers, '\n'
           print response.status, '\n'
           print response.response, '\n'
@@ -115,7 +137,7 @@ failedCount = 0
 resultTree = ET.fromstring(result)
 distributionEntries = resultTree.find('.//t:PollCiTestEventsResultsResponse/t:PollCiTestEventsResultsResult/a:DistributionEvents/b:MonitorDistributionEvent/b:MonitorDistributionItems/b:MonitorDistributionItem/b:MonitorDistributionList/b:MonitorDistributionEntries', ns)
 
-testCaseStatuses = {}
+testCaseStatuses = {} 
 for distributionEntry in distributionEntries:
       testCaseStatus = distributionEntry.find('./b:TestResult',ns).text
       testCaseName = distributionEntry.find('./b:Name',ns).text
@@ -129,8 +151,19 @@ for distributionEntry in distributionEntries:
 passedTestCaseCount = passedCount
 failedTestCaseCount = failedCount
 
+if emailTestResults == True :
+   resultsBody = 'Test event: %s execution results\n' % (testEvent)
+   for key in testCaseStatuses"
+       statusString += '%s\t: %s\n' % (key, testCaseStatuses"[key])
+   sendEmail(resultsBody)
 
-if not allPassed :
-   print 'Not all test cases passed'
-   sys.exit(1) 
+
+if not allPassed:
+   if failTask == True : 
+     print 'Not all test cases passed'
+     sys.exit(1) 
+   else:
+        print 'Some of the test cases failed'
+
+
 

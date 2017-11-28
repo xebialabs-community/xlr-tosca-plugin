@@ -19,7 +19,13 @@
 		<property name="taskColor" hidden="true" default="#2666ae" />
 		<property name="toscaServer" category="input" label="Server" referenced-type="tosca.Server" kind="ci" />
 		<property name="testEvent" category="input" description="Test event to be executed" required="true"/>
-		<property name="failTask" kind="boolean" category="input" description="Mark task as failed if any test case fails" required="true"/>
+		<property name="thresholdPrrcentage"  label="Threshold(in %)" category="input" description="Test Threshold"  default="80" required="false"/>
+		<property name="failTask" kind="boolean" category="input" description="Mark task as failed if any test case fails, if selected will ignore threshold value" required="true"/>
+
+		<property name="emailTestResults" kind="boolean" category="input" required="true" description="If selected will email the test results" />
+		<property name="emailTo" category="input" description="Email address for notifying test results"/>
+		<property name="subject" category="input" description="Test Results notification email address" default="Test Results"/>
+
 
 		<property name="passedTestCaseCount" category="output"/>
 	    <property name="failedTestCaseCount" category="output"/>

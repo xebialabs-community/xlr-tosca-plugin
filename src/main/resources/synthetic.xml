@@ -91,6 +91,7 @@
 			category="input" 
 			description="Comma separated email addresses"/>
 		<property name="ccAddresses"
+			required="false"
 			category="input" 
 			description="Comma separated email addresses"/>
 		<property name="subject" 

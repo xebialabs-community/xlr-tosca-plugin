@@ -14,6 +14,12 @@ from org.apache.commons.mail import EmailException, SimpleEmail, DefaultAuthenti
 import time, sys
 import xml.etree.ElementTree as ET
 
+from java.util import Date
+from java.util import GregorianCalendar
+from javax.xml.datatype import DatatypeConfigurationException
+from javax.xml.datatype import DatatypeFactory
+from javax.xml.datatype import XMLGregorianCalendar
+
 
 if toscaServer is None:
     print "No server provided."
@@ -55,6 +61,10 @@ def sendEmail (message):
         sys.exit(1)  
 
 clientId = UUID.randomUUID()
+dt           = Date()
+gregCalendar = GregorianCalendar()
+gregCalendar.setTime(dt)
+startTime    = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregCalendar)
 
 execTestEventContent= """
   <s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/'>
@@ -68,12 +78,12 @@ execTestEventContent= """
       <b:string>%s</b:string>
     </a:EventNames>
     <a:PollingInterval>300000</a:PollingInterval>
-    <a:StartTime>2017-11-22T05:10:50.8470018-05:00</a:StartTime>
+    <a:StartTime>%s</a:StartTime>
    </distributeCiTestEventsRequest>
   </DistributeCiTestEvents>
 </s:Body>
 </s:Envelope>
-""" % (clientId, testEvent)
+""" % (clientId, testEvent, startTime)
 
 pollResultsContent = """
 <soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' 

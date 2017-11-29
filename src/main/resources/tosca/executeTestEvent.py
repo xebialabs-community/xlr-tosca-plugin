@@ -10,7 +10,7 @@
 
 
 from  java.util import UUID
-from org.apache.commons.mail import EmailException, SimpleEmail
+from org.apache.commons.mail import EmailException, SimpleEmail, DefaultAuthenticator, HtmlEmail
 import time, sys
 import xml.etree.ElementTree as ET
 
@@ -20,37 +20,39 @@ if toscaServer is None:
     sys.exit(1)
 
 if emailTestResults == True :
-   if smptpServer is None :
-      print "No SMTP server provided"
-      sys.exit(1)
+    if smtpServer is None :
+        print "No SMTP server provided"
+        sys.exit(1)
 
 SOCKET_TIMEOUT = 30000 # 30s
 
-def sendEmail(body):
-    email = SimpleEmail()
+def sendEmail (message):
+    email = HtmlEmail()
     email.setHostName(smtpServer['host'])
     email.setSmtpPort(smtpServer['port'])
+    if smtpServer['useTLS'] == True :
+        email.setSSLOnConnect(True)
     if smtpServer['username']:
        email.setAuthentication(smtpServer['username'], smtpServer['password'])
-       email.setSocketConnectionTimeout(SOCKET_TIMEOUT);
-       email.setSocketTimeout(SOCKET_TIMEOUT);
+       email.setSocketConnectionTimeout(SOCKET_TIMEOUT)
+       email.setSocketTimeout(SOCKET_TIMEOUT)
 
     try:
-       email.setFrom(smtpServer['fromAddress'])
-       for toAddress in toAddresses.split(','):
-           email.addTo(toAddress)
-       if ccAddresses:
-          for ccAddress in ccAddresses.split(','):
-              email.addCc(ccAddress)
-       if bccAddresses:
-          for bccAddress in bccAddresses.split(','):
-              email.addBcc(bccAddress)
-       email.setSubject(subject)
-       email.setMsg(body)
-       email.send()
+        email.setFrom(smtpServer['fromAddress'])
+        for toAddress in toAddresses.split(','):
+            email.addTo(toAddress)
+        if ccAddresses:
+            for ccAddress in ccAddresses.split(','):
+                email.addCc(ccAddress)
+        #if bccAddresses:
+        #    for bccAddress in bccAddresses.split(','):
+        #        email.addBcc(bccAddress)
+        email.setSubject(subject)
+        email.setHtmlMsg(message)
+        email.send()
     except EmailException, e:
-       print 'ERROR: Unable to send notification due to:', e
-       sys.exit(1)  
+        print 'ERROR: Unable to send notification due to:', e
+        sys.exit(1)  
 
 clientId = UUID.randomUUID()
 
@@ -71,7 +73,7 @@ execTestEventContent= """
   </DistributeCiTestEvents>
 </s:Body>
 </s:Envelope>
- """ % (clientId, testEvent)
+""" % (clientId, testEvent)
 
 pollResultsContent = """
 <soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' 
@@ -106,23 +108,23 @@ else:
 
 headers = {'SOAPAction':'Tricentis.DistributionServer.ServiceInterface.Services/IManagerService/PollCiTestEventsResults'}
 while (True):
-   response = request.post(toscaServer['apiUrl'], pollResultsContent, contentType = 'text/xml', headers = headers)
-   if response.status == 200 :
-      respBody =  response.response
-      tree =  ET.fromstring(respBody)
-      execFinished = tree.find('.//t:PollCiTestEventsResultsResponse/t:PollCiTestEventsResultsResult/a:ExecutionFinished', ns).text
-      if execFinished == "false":
-         print "Execution still in progress for id: %s" % (clientId), '\n'
-         time.sleep(300)
-      elif execFinished == "true":
-           result = response.response
-           break 
-      else:
-          print response.headers, '\n'
-          print response.status, '\n'
-          print response.response, '\n'
-          sys.exit(1)
-   else:
+    response = request.post(toscaServer['apiUrl'], pollResultsContent, contentType = 'text/xml', headers = headers)
+    if response.status == 200 :
+        respBody =  response.response
+        tree =  ET.fromstring(respBody)
+        execFinished = tree.find('.//t:PollCiTestEventsResultsResponse/t:PollCiTestEventsResultsResult/a:ExecutionFinished', ns).text
+        if execFinished == "false":
+            print "Execution still in progress for id: %s" % (clientId), '\n'
+            time.sleep(300)
+        elif execFinished == "true":
+            result = response.response
+            break 
+        else:
+            print response.headers, '\n'
+            print response.status, '\n'
+            print response.response, '\n'
+            sys.exit(1)
+    else:
         print response.headers, '\n'
         print response.status, '\n'
         print response.response, '\n'
@@ -139,31 +141,59 @@ distributionEntries = resultTree.find('.//t:PollCiTestEventsResultsResponse/t:Po
 
 testCaseStatuses = {} 
 for distributionEntry in distributionEntries:
-      testCaseStatus = distributionEntry.find('./b:TestResult',ns).text
-      testCaseName = distributionEntry.find('./b:Name',ns).text
-      testCaseStatuses[testCaseName] = testCaseStatus
-      if testCaseStatus == 'Passed':
-         passedCount += 1
-      else:
-          failedCount += 1
-          allPassed = False
+    testCaseStatus = distributionEntry.find('./b:TestResult',ns).text
+    testCaseName = distributionEntry.find('./b:Name',ns).text
+    testCaseStatuses[testCaseName] = testCaseStatus
+    if testCaseStatus == 'Passed':
+       passedCount += 1
+    else:
+        failedCount += 1
+        allPassed = False
 
 passedTestCaseCount = passedCount
 failedTestCaseCount = failedCount
+totalTestCases = passedTestCaseCount + failedTestCaseCount
+thresholdVal = round(float(passedTestCaseCount * 100)/float(totalTestCases),2)
 
+statusString = ''
 if emailTestResults == True :
-   resultsBody = 'Test event: %s execution results\n' % (testEvent)
-   for key in testCaseStatuses"
-       statusString += '%s\t: %s\n' % (key, testCaseStatuses"[key])
-   sendEmail(resultsBody)
+    resultsBody = 'Test event: <b>%s</b> execution results in release %s<br><br>' % (testEvent,release.title)
+    subject += ' - %s%s' % (thresholdVal, '%')
+    failedResults ='<table>'
+    passedResults ='<table>'
+    for key in testCaseStatuses :
+        if testCaseStatuses[key] == 'Passed' :
+            passedResults += '<tr><td>%s</td><td><font color="green">%s</font><td></tr>' % (key, testCaseStatuses[key])
+        else:
+            failedResults += '<tr><td>%s</td><td><font color="red">%s</font><td></tr>' % (key, testCaseStatuses[key])
+
+    if failedTestCaseCount == 0:
+        failedResults = '<tr><td>None</td></tr>'
+    if passedTestCaseCount == 0:
+        passedResults = '<tr><td>None</td></tr>'
+
+    failedResults +='</table>'
+    passedResults +='</table>'
+
+    resultsBody += '<b>Failed Test Cases</b>'
+    resultsBody += failedResults 
+    resultsBody += '<br>'
+    resultsBody += '<b>Passed Test Cases</b>'
+    resultsBody += passedResults
+
+    sendEmail(resultsBody)
 
 
 if not allPassed:
-   if failTask == True : 
-     print 'Not all test cases passed'
-     sys.exit(1) 
-   else:
-        print 'Some of the test cases failed'
+    if failTask == True : 
+        print 'Not all test cases passed'
+        sys.exit(1) 
+    else:
+        if thresholdVal < float(desiredThreshold) :
+            print 'Success rate of %s is below desired value %s' % (thresholdVal, desiredThreshold)
+            sys.exit(1) 
+        else:
+          print 'Passed with some failures'
 
 
 

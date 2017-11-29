@@ -35,6 +35,9 @@
 		<property name="host" />
 		<property name="port" 
 			kind="integer" />
+		<property name="useTLS" 
+			required="false" 
+			kind="boolean"/>	
 		<property name="username" 
 			required="false" />
 		<property name="password" 
@@ -66,11 +69,11 @@
 			category="input" 
 			description="Test event to be executed" 
 			required="true"/>
-		<property name="thresholdPercentage" 
+		<property name="desiredThreshold" 
 			kind="integer"  
 			label="Threshold(in %)" 
 			category="input" 
-			description="Test Threshold"
+			description="Desired test cases success ratio"
 			default="80" 
 			required="false"/>
 		<property name="failTask" 
@@ -84,7 +87,10 @@
 			category="input"
 			required="true"
 			description="If selected will email the test results" />			
-		<property name="emailTo"
+		<property name="toAddresses"
+			category="input" 
+			description="Comma separated email addresses"/>
+		<property name="ccAddresses"
 			category="input" 
 			description="Comma separated email addresses"/>
 		<property name="subject" 

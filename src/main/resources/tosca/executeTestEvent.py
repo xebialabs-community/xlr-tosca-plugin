@@ -127,6 +127,7 @@ while (True):
             print "Execution still in progress for id: %s" % (clientId), '\n'
             time.sleep(300)
         elif execFinished == "true":
+            print "Execution finished"
             result = response.response
             break 
         else:
@@ -168,7 +169,7 @@ thresholdVal = round(float(passedTestCaseCount * 100)/float(totalTestCases),2)
 statusString = ''
 if emailTestResults == True :
     resultsBody = 'Test event: <b>%s</b> execution results in release %s<br><br>' % (testEvent,release.title)
-    subject += ' - %s%s' % (thresholdVal, '%')
+    subject += ' - %s - %s%s' % (testEvent, thresholdVal, '%')
     failedResults ='<table>'
     passedResults ='<table>'
     for key in testCaseStatuses :
@@ -178,9 +179,9 @@ if emailTestResults == True :
             failedResults += '<tr><td>%s</td><td><font color="red">%s</font><td></tr>' % (key, testCaseStatuses[key])
 
     if failedTestCaseCount == 0:
-        failedResults = '<tr><td>None</td></tr>'
+        failedResults += '<tr><td>None</td></tr>'
     if passedTestCaseCount == 0:
-        passedResults = '<tr><td>None</td></tr>'
+        passedResults += '<tr><td>None</td></tr>'
 
     failedResults +='</table>'
     passedResults +='</table>'
